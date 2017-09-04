@@ -455,6 +455,112 @@ int mysock_print_pkts(char* pkt, int len, int is_ascii)
     return 0;
 }
 
+/* Function Name:
+ *      mysock_write_pkts
+ * Description:
+ *      write packet to socket fd.
+ * Input:
+ *      fd         - socket to write
+ *      buff       - point to packet buffer
+ *      len        - packet length
+ * Output:
+ *      None
+ * Return:
+ *      =  0                 - ok
+ *      =  -1                - error
+ * Note:
+ *      None
+ */
+int mysock_write_pkts(int fd, void* buff, int len)
+{
+    int bytes_left;
+    int written_bytes;
+    char *ptr;
+
+    if((fd < 0) || (buff == NULL) || (len <= 0))
+    {
+        return -1;
+    }
+
+    ptr = buff;
+    bytes_left = len;
+
+    while(bytes_left > 0)
+    {
+        written_bytes = write(fd, ptr, bytes_left);
+        if(written_bytes <= 0)
+        {
+            /*if(errno == EINTR)
+            {
+                written_bytes = 0;
+            }
+            else*/
+            {
+                return -1;
+            }
+        }
+        bytes_left -= written_bytes;
+        ptr += written_bytes;
+    }
+
+    return 0;
+}
+
+/* Function Name:
+ *      mysock_read_pkts
+ * Description:
+ *      read packet from socket fd.
+ * Input:
+ *      fd         - socket to read
+ *      buff       - point to packet buffer
+ *      len        - packet length
+ * Output:
+ *      None
+ * Return:
+ *      >  0                 - read bytes
+ *      =  0                 - fd closed
+ *      =  -1                - error
+ * Note:
+ *      None
+ */
+int mysock_read_pkts(int fd, void* buff, int len)
+{
+    int bytes_left;
+    int bytes_read;
+    char *ptr;
+
+    if((fd < 0) || (buff == NULL) || (len <= 0))
+    {
+        return -1;
+    }
+
+    ptr = buff;
+    bytes_left = len;
+
+    while(bytes_left > 0)
+    {
+        bytes_read = read(fd, ptr, bytes_left);
+        if(bytes_read < 0)
+        {
+            if(errno == EINTR)
+            {
+                bytes_read = 0;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+        else if(bytes_read == 0)
+        {
+            break;
+        }
+        bytes_left -= bytes_read;
+        ptr += bytes_read;
+    }
+    return (len - bytes_left);
+}
+
 static int MySockListenFd = 0;
 static int MySockEpollFd = 0;
 static void _mysock_epoll_exit(int no)
@@ -477,6 +583,24 @@ static int _mysock_epoll_regsig_exit(int listenfd, int epollfd)
     return 0;
 }
 
+/* Function Name:
+ *      my_sock_tcp_epolls
+ * Description:
+ *      create a tcp  epoll sever
+ * Input:
+ *      addr_t         - ip addr string and port num
+ *      stdin_f        - stdin in callback function
+ *      stdin_b        - stdin recv buffer
+ *      recv_f         - recv in callback function
+ *      recv_b         - recv buffer
+ * Output:
+ *      None
+ * Return:
+ *      =  0                 - ok
+ *      =  -1                - error
+ * Note:
+ *      forver loop, no return.
+ */
 int my_sock_tcp_epolls
 (
     mysock_addr_t* addr_t, 

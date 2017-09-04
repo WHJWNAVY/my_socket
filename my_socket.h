@@ -16,7 +16,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <signal.h>
-
+#include <errno.h>
 
 #define MYSOCK_DEBUG 1
 
@@ -154,8 +154,78 @@ extern int mysock_udp_sinit(mysock_addr_t* addr_t);
  */
 extern int mysock_udp_cinit(mysock_addr_t* addr_t);
 
+/* Function Name:
+ *      mysock_print_pkts
+ * Description:
+ *      print packet.
+ * Input:
+ *      pkt       - point to packet
+ *      len       - packet length
+ *      is_ascii  - print with ascii mode(1) or not(0)
+ * Output:
+ *      None
+ * Return:
+ *      =  0                 - ok
+ * Note:
+ *      None
+ */
 extern int mysock_print_pkts(char* pkt, int len, int is_ascii);
 
+/* Function Name:
+ *      mysock_write_pkts
+ * Description:
+ *      write packet to socket fd.
+ * Input:
+ *      fd         - socket to write
+ *      buff       - point to packet buffer
+ *      len        - packet length
+ * Output:
+ *      None
+ * Return:
+ *      =  0                 - ok
+ *      =  -1                - error
+ * Note:
+ *      None
+ */
+extern int mysock_write_pkts(int fd, void* buff, int len);
+
+/* Function Name:
+ *      mysock_read_pkts
+ * Description:
+ *      read packet from socket fd.
+ * Input:
+ *      fd         - socket to read
+ *      buff       - point to packet buffer
+ *      len        - packet length
+ * Output:
+ *      None
+ * Return:
+ *      >  0                 - read bytes
+ *      =  0                 - fd closed
+ *      =  -1                - error
+ * Note:
+ *      None
+ */
+extern int mysock_read_pkts(int fd, void* buff, int len);
+
+/* Function Name:
+ *      my_sock_tcp_epolls
+ * Description:
+ *      create a tcp  epoll sever
+ * Input:
+ *      addr_t         - ip addr string and port num
+ *      stdin_f        - stdin in callback function
+ *      stdin_b        - stdin recv buffer
+ *      recv_f         - recv in callback function
+ *      recv_b         - recv buffer
+ * Output:
+ *      None
+ * Return:
+ *      =  0                 - ok
+ *      =  -1                - error
+ * Note:
+ *      forver loop, no return.
+ */
 extern int my_sock_tcp_epolls
 (
     mysock_addr_t* addr_t, 
